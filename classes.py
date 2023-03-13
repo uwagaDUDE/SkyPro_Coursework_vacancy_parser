@@ -44,4 +44,19 @@ class HeadHunterParse:
             hh.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
             hh.close()
 
+class SuperJob:
+
+    def __init__(self, vacancy_name=''):
+        api_key = 'v3.r.137422224.75489c5383100c7176163d8f230a8758644e9611.4fbd1de871c97686d1382326151c6463b02e4cf2'
+        headers = {
+            "X-Api-App-Id": api_key,
+        }
+        params = {
+            "keyword": f"{vacancy_name}"
+        }
+        self.vacancy_list = requests.get(f'https://api.superjob.ru/2.0/vacancies/', headers=headers, params=params)
+        with open('./.cache/Superjob/vacancy_list.json', 'w', encoding='UTF-8') as sj:
+            vacancy_json = self.vacancy_list.json()
+            sj.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
+            sj.close()
 
