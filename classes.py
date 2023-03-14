@@ -29,24 +29,26 @@ class VacancyCache:
             os.mkdir('./.cache/Superjob')
             os.mkdir('./.cache/HHru')
 
-class HeadHunterParse:
+class SearchedVacancy:
+    def __init__(self, vacancy_name):
+        self.vacancy_name = vacancy_name
+
+class HeadHunterParse(SearchedVacancy):
     """
     Класс получения и кэширования информации с сайта hh.ru
     """
-
     def __init__(self, vacancy_name, v_count=10, v_page=1):
         """
         :param v_count: Количество вакансий, не более 20 на 1 странице!.
         :param v_page: Количество страниц, на 1 странице не более 20 вакансий.
         :param vacancy_name: Название искомой вакансии
         """
-
-        self.vacancy_name = vacancy_name
+        super().__init__(vacancy_name)
         parametres = {'per_page':v_count,
                       'page':v_page,
                       }
 
-        self.vacancy_list = requests.get(f'https://api.hh.ru/vacancies?text={self.vacancy_name}'
+        self.vacancy_list = requests.get(f'https://api.hh.ru/vacancies?text={vacancy_name}'
                                          f'&area=1'
                                          f'&search_field=name',
                                          parametres)
@@ -68,19 +70,22 @@ class HeadHunterParse:
                 with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh:
                     pass
                     #TODO ДОДЕЛАТЬ РАБОТУ С КЭШЕМ
+
             except Exception:
                 raise AllErrors().CacheError()
 
-class SuperJob:
-
+class SuperJob(SearchedVacancy):
+    """
+    Класс обработки получаемой информации с сайта superjob.ru
+    """
     def __init__(self, vacancy_name):
-        self.vacancy_name = vacancy_name
+        super().__init__(vacancy_name)
         api_key = script.api_loader()
         headers = {
             "X-Api-App-Id": api_key,
         }
         params = {
-            "keyword": f"{self.vacancy_name}"
+            "keyword": f"{vacancy_name}"
         }
         self.vacancy_list = requests.get(f'https://api.superjob.ru/2.0/vacancies/', headers=headers, params=params)
         if self.vacancy_list.status_code == 200:
@@ -103,8 +108,10 @@ class SuperJob:
 
 class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
 
-    def __int__(self, vacancy_name):
-        super.__init__(vacancy_name)
+    def __init__(self, vacancy_name):
+        super().__init__(vacancy_name)
+        super(HeadHunterParse, self).__init__(vacancy_name)
+        super(SuperJob, self).__init__(vacancy_name)
 
 class AllErrors(Exception):
     """
