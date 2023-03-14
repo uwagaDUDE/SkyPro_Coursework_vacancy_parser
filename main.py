@@ -6,11 +6,14 @@ if __name__ == '__main__':
     # hh_vc_counter = input(f'Введите количество вакансий на странице (не более 20): ')
     # hh_pages = input(f'Введите количество страниц для поиска: ')
     # functions.check_str(hh_vc_counter), functions.check_str(hh_pages), functions.check_max_len(hh_pages, hh_vc_counter)
+    # vacancy = scripts.GetVacancy(vc_searched, hh_vc_counter, hh_pages)
+
     vacancy = scripts.GetVacancy('python', 10, 1)
     vacancy.get_hh()
     search_cycle = True
     next = 0
     print(vacancy.information_output(next))
+
     while search_cycle != False:
         next = next+1
         search = input(f'Ищем дальше(+/-): ')
