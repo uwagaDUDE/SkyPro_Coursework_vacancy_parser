@@ -1,7 +1,8 @@
 import os
 import requests
 import json
-from dotenv import load_dotenv as api
+import utils as script
+
 class VacancyCache:
     """
     Работа с файлами связанными с вакансиями
@@ -29,34 +30,95 @@ class VacancyCache:
             os.mkdir('./.cache/HHru')
 
 class HeadHunterParse:
+    """
+    Класс получения и кэширования информации с сайта hh.ru
+    """
 
-    def __init__(self, vacancy_name='', v_count=10, v_page=1):
+    def __init__(self, vacancy_name, v_count=10, v_page=1):
         """
         :param v_count: Количество вакансий, не более 20 на 1 странице!.
         :param v_page: Количество страниц, на 1 странице не более 20 вакансий.
+        :param vacancy_name: Название искомой вакансии
         """
+
+        self.vacancy_name = vacancy_name
         parametres = {'per_page':v_count,
                       'page':v_page,
                       }
-        self.vacancy_list = requests.get(f'https://api.hh.ru/vacancies?text={vacancy_name}&area=1&search_field=name', parametres)
-        with open('./.cache/HHru/vacancy_list.json', 'w', encoding='UTF-8') as hh:
-            vacancy_json = self.vacancy_list.json()
-            hh.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
-            hh.close()
+
+        self.vacancy_list = requests.get(f'https://api.hh.ru/vacancies?text={self.vacancy_name}'
+                                         f'&area=1'
+                                         f'&search_field=name',
+                                         parametres)
+        if self.vacancy_list.status_code == 200:
+
+            try:
+                with open('./.cache/HHru/vacancy_list.json', 'w', encoding='UTF-8') as hh:
+                    vacancy_json = self.vacancy_list.json()
+                    hh.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
+
+            except Exception as Error:
+                print(f'Произошла ошибка:'
+                      f'{Error}')
+
+        else:
+            print('Ошибка подключения, поиск вакансий в кэше...')
+
+            try:
+                with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh:
+                    pass
+                    #TODO ДОДЕЛАТЬ РАБОТУ С КЭШЕМ
+            except Exception:
+                raise AllErrors().CacheError()
 
 class SuperJob:
 
-    def __init__(self, vacancy_name=''):
-        api_key = 'v3.r.137422224.75489c5383100c7176163d8f230a8758644e9611.4fbd1de871c97686d1382326151c6463b02e4cf2'
+    def __init__(self, vacancy_name):
+        self.vacancy_name = vacancy_name
+        api_key = script.api_loader()
         headers = {
             "X-Api-App-Id": api_key,
         }
         params = {
-            "keyword": f"{vacancy_name}"
+            "keyword": f"{self.vacancy_name}"
         }
         self.vacancy_list = requests.get(f'https://api.superjob.ru/2.0/vacancies/', headers=headers, params=params)
-        with open('./.cache/Superjob/vacancy_list.json', 'w', encoding='UTF-8') as sj:
-            vacancy_json = self.vacancy_list.json()
-            sj.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
-            sj.close()
+        if self.vacancy_list.status_code == 200:
 
+            with open('./.cache/Superjob/vacancy_list.json', 'w', encoding='UTF-8') as sj:
+                vacancy_json = self.vacancy_list.json()
+                sj.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
+
+        else:
+            print('Ошибка подключения, поиск вакансий в кэше...')
+
+            try:
+                with open('./.cache/Superjob/vacancy_list.json', 'r', encoding='UTF-8') as sj:
+                    pass
+                    # TODO ДОДЕЛАТЬ РАБОТУ С КЭШЕМ
+
+            except Exception:
+                raise AllErrors().CacheError()
+
+
+class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
+
+    def __int__(self, vacancy_name):
+        super.__init__(vacancy_name)
+
+class AllErrors(Exception):
+    """
+    Класс включающий в себя классы ошибок
+    """
+    class ApiKeyError(Exception):
+        """
+        Ошибка ввода ключа
+        """
+        def __init__(self, api_key):
+            if api_key == None:
+                raise Exception(f'Ошибка ввода ключа, попробуйте ввести его вручную.')
+
+    class CacheError(Exception):
+
+        def __init__(self):
+            raise Exception(f'Файла с кэшом не найдено.')
