@@ -32,6 +32,9 @@ class VacancyCache:
 
 class SearchedVacancy:
     def __init__(self, vacancy_name):
+        """
+        :param vacancy_name: Название искомой вакансии
+        """
         self.vacancy_name = vacancy_name
 
 
@@ -70,6 +73,9 @@ class SuperJob(SearchedVacancy):
     Класс обработки получаемой информации с сайта superjob.ru
     """
     def __init__(self, vacancy_name):
+        """
+        :param vacancy_name: Название вакансии
+        """
         super().__init__(vacancy_name)
         api_key = script.api_loader()
         headers = {"X-Api-App-Id": api_key}
@@ -94,6 +100,7 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
     vacancy_desc = []
     vacancy_urls = []
     vacancy_salary = []
+
     def __init__(self, vacancy_name, v_count, v_page):
         """
         :param v_count: Количество вакансий (не более 20 на 1 страницу)
@@ -102,31 +109,37 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
         super().__init__(vacancy_name, v_count=v_count, v_page=v_page)
         super(HeadHunterParse, self).__init__(vacancy_name)
         super(SuperJob, self).__init__(vacancy_name)
-        self.vacancy_name = ''
-        self.vacancy_description = ''
-        self.vacancy_url = ''
-        self.vacancy_money = ''
 
     def get_hh(self):
+        """
+        Заполняем атрибуты  vacancy_names, vacancy_desc, vacancy_urls, vacancy_salary содержимым
+        :return:
+        """
         with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh:
             hh_json = json.load(hh)
 
             for vacs in hh_json['items']:
-
                 self.vacancy_names.append(vacs['name'])
                 try:
                     self.vacancy_salary.append(f"От {vacs['salary']['from']} {vacs['salary']['currency']}")
-                    # self.vacancy_salary.append(f"От {vacs['salary']} ")
                 except TypeError:
                     try:
                         self.vacancy_salary.append(f"До {vacs['salary']['from']} {vacs['salary']['currency']}")
                     except TypeError:
                         self.vacancy_salary.append(f'Зарплата не указана')
-
                 self.vacancy_urls.append(vacs['alternate_url'])
-                self.vacancy_desc.append(vacs['snippet']['responsibility'])
+                if vacs['snippet']['responsibility'] == None:
+                    self.vacancy_desc.append(f'Работодатель не указал описание.')
+                else:
+                    self.vacancy_desc.append(vacs['snippet']['responsibility'])
 
-    def information_output(self, next=-1):
+
+    def information_output(self, next):
+        """
+        Вывод информации
+        :param next: Для перебора списка вакансий, можно конечно было через for, но я вспомнил о нем только когда писал этот докстринг
+        :return:
+        """
         return f'Вакансия: {self.vacancy_names[next]}\n' \
                f'Описание: {self.vacancy_desc[next]}\n' \
                f'Заработная плата: {self.vacancy_salary[next]}\n' \
@@ -145,6 +158,9 @@ class AllErrors(Exception):
         Ошибка ввода ключа
         """
         def __init__(self, api_key):
+            """
+            :param api_key: API ключ
+            """
             if api_key == None:
                 raise Exception(f'Ошибка ввода ключа, попробуйте ввести его вручную.')
 

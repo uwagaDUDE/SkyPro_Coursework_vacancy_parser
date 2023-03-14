@@ -16,11 +16,17 @@ if __name__ == '__main__':
 
     while search_cycle != False:
         next = next+1
+
+        if next > len(vacancy.vacancy_names):
+            search_cycle = False
+            break
+
         search = input(f'Ищем дальше(+/-): ')
         if search == '+':
             print(vacancy.information_output(next))
         elif search == '-':
             search_cycle = False
+            print(f'Надеюсь вы нашли что искали :)')
         else:
             print('Введите + либо -')
 
