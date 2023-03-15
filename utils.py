@@ -1,5 +1,6 @@
 import requests
 import classes as cl
+import json
 
 def api_loader():
     """
@@ -25,10 +26,27 @@ def check_str(hh_attribute):
     else:
         raise cl.AllErrors().WrongInput()
 
+
 def check_max_len(hh_pages, hh_vacs):
-    if int(hh_vacs) > 20:
+    if int(hh_vacs) > 100:
         raise cl.AllErrors().WrongMaxValue()
     elif int(hh_pages)*int(hh_vacs) > 2000:
         raise cl.AllErrors().WrongMaxVacancies()
     else:
         pass
+
+
+def open_file(folder, request):
+    """
+    Функция которая записывает в файл информацию о вакансиях
+    :param folder: Папка в .cache хранящая в себе информацию с вакансиями (HHru, Superjob)
+    :param request: Атрибут содрежащий get запрос
+    :return:
+    """
+    try:
+        with open(f'./.cache/{folder}/vacancy_list.json', 'w', encoding='UTF-8') as vc_file:
+            vacancy_json = request.json()
+            vc_file.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
+    except Exception as Error:
+        print(f'Произошла ошибка:'
+              f'{Error}')

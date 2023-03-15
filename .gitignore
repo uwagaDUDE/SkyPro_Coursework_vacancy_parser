@@ -1,3 +1,5 @@
 .idea
 .cache
 .env
+test.py
+last_search.json
