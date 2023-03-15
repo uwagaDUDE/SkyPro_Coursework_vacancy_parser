@@ -92,7 +92,7 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
     vacancy_salary_to = []
     salary_curr = []
     vacancy_dict = {}
-
+    tick = -1
     def __init__(self, vacancy_name, v_count, v_page):
         """
         :param v_count: Количество вакансий (не более 20 на 1 страницу)
@@ -117,54 +117,55 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
 
     def get_hh(self):
         """
-        Заполняем атрибуты  vacancy_names, vacancy_desc, vacancy_urls, vacancy_salary содержимым c hh.ru
+        Заполняем атрибуты vacancy_names, vacancy_desc, vacancy_urls, vacancy_salary содержимым c hh.ru
         :return:
         """
-        with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh:
-            hh_json = json.load(hh)
-            print(len(hh_json['items']))
-            for vacs in hh_json['items']:
-                self.vacancy_names.append(vacs['name'])
-                try:
-                    self.vacancy_salary_from.append(vacs['salary']['from'])
-                    try:
-                        self.vacancy_salary_to.append(vacs['salary']['to'])
-                    except TypeError:
-                        self.vacancy_salary_to.append(0)
-                except TypeError:
-                    try:
-                        self.vacancy_salary_from.append(0)
-                        self.vacancy_salary_to.append(vacs['salary']['to'])
-                    except TypeError:
-                        self.vacancy_salary_from.append(0)
-                        self.vacancy_salary_to.append(0)
-                try:
-                    self.salary_curr.append(vacs['salary']['currency'])
-                except TypeError:
-                    self.salary_curr.append(None)
-                self.vacancy_urls.append(vacs['alternate_url'])
-                if vacs['snippet']['responsibility'] == None:
-                    self.vacancy_desc.append(f'Работодатель не указал описание.')
+        with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh_file:
+            hh_json = json.load(hh_file)
+            for vac in hh_json['items']:
+                self.vacancy_names.append(vac['name'])
+                if vac['salary'] is not None:
+                    salary_from = vac['salary'].get('from', '-')
+                    salary_to = vac['salary'].get('to', '-')
                 else:
-                    self.vacancy_desc.append(vacs['snippet']['responsibility'])
+                    salary_from = '-'
+                    salary_to = '-'
+                self.vacancy_salary_from.append(salary_from)
+                self.vacancy_salary_to.append(salary_to)
+                if vac['salary'] is not None:
+                    salary_cur = vac['salary'].get('currency', '-')
+                else:
+                    salary_cur = ''
+                self.salary_curr.append(salary_cur)
+                self.vacancy_urls.append(vac['alternate_url'])
+                responsibility = vac['snippet']['responsibility']
+                if responsibility is None:
+                    self.vacancy_desc.append('Работодатель не указал описание.')
+                else:
+                    self.vacancy_desc.append(responsibility)
 
     def get_sj(self):
         with open('./.cache/Superjob/vacancy_list.json', 'r', encoding='UTF-8') as sj:
             sj_json = json.load(sj)
 
-    def information_output(self, next):
+    def __str__(self):
         """
         Вывод информации
-        :param next: Для перебора списка вакансий, можно конечно было через for, но я вспомнил о нем только когда писал этот докстринг
         :return:
         """
-        try:
-            return f'Вакансия: {self.vacancy_names[next]}\n' \
-                   f'Описание: {self.vacancy_desc[next]}\n' \
-                   f'Заработная плата: {self.vacancy_salary_from[next]}\n' \
-                   f'Ссылка на вакансию: {self.vacancy_urls[next]}'
-        except IndexError:
-            raise Exception(f'Вакансии с таким названием не найдено')
+        with open('last_search.json', 'r', encoding='UTF-8') as loader:
+            search = json.load(loader)
+            try:
+                self.tick = self.tick+1
+                tick = self.tick
+                return f'\n' \
+                     f'Вакансия: {search[str(tick)]["vacancy_name"]}\n' \
+                       f'Описание: {search[str(tick)]["vacancy_description"]}\n' \
+                       f'Заработная плата: от {search[str(tick)]["vacancy_salary"]["from"]} ' \
+                       f'до {search[str(tick)]["vacancy_salary"]["to"]} {search[str(tick)]["vacancy_salary"]["cur"]}\n' \
+                       f'Ссылка на вакансию: {search[str(tick)]["vacancy_url"]}'
+            except Exception:
+                return f'123'
 
 
 
