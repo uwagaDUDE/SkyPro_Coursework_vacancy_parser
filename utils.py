@@ -71,7 +71,6 @@ def get_vacancy_information(file, names, salary_f, salary_t, desc, urls, cur):
 
     for vac in file.get('items', 'objects'):
         if 'name' in vac:
-            print(vac)
             names.append(vac.get('name'))
         else:
             names.append(file['objects'][0]['profession'])
@@ -131,5 +130,5 @@ def get_vacancy_information(file, names, salary_f, salary_t, desc, urls, cur):
 
             except KeyError:
                 urls.append('Ошибка')
-                responsibility = file['objects'][0]['client']['description']
+                responsibility = 'Ошибка'
         desc.append(responsibility)
