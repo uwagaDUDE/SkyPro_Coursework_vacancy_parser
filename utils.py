@@ -28,6 +28,12 @@ def check_str(hh_attribute):
 
 
 def check_max_len(hh_pages, hh_vacs):
+    """
+    Проверка максимальной длинны поиска
+    :param hh_pages: количество страниц
+    :param hh_vacs: количество вакансий
+    :return:
+    """
     if int(hh_vacs) > 100:
         raise cl.AllErrors().WrongMaxValue()
     elif int(hh_pages)*int(hh_vacs) > 2000:
@@ -50,3 +56,80 @@ def open_file(folder, request):
     except Exception as Error:
         print(f'Произошла ошибка:'
               f'{Error}')
+
+def get_vacancy_information(file, names, salary_f, salary_t, desc, urls, cur):
+    """
+    :param file: Атрибут файла
+    :param names: Атрибут списка содержащий названия вакансий
+    :param salary_f: Атрбиут зп ОТ
+    :param salary_t: Атрибут зп ДО
+    :param desc: Атрибут описания вакансии
+    :param urls: Атрибут ссылки на вакансию
+    :param cur: Атрибут валюты
+    :return:
+    """
+
+    for vac in file.get('items', 'objects'):
+        if 'name' in vac:
+            print(vac)
+            names.append(vac.get('name'))
+        else:
+            names.append(file['objects'][0]['profession'])
+
+        try:
+            salary_from = vac['salary'].get('from')
+            salary_to = vac['salary'].get('to')
+
+        except AttributeError:
+            try:
+                salary_from = file['objects'][0]['payment_from']
+                salary_to = file['objects'][0]['payment_to']
+
+            except KeyError:
+                salary_from, salary_to = 'Не указано', 'Не указано'
+
+        except TypeError:
+            try:
+                salary_from = file['objects'][0]['payment_from']
+                salary_to = file['objects'][0]['payment_to']
+
+            except KeyError:
+                salary_from, salary_to = 'Не указано', 'Не указано'
+
+        salary_f.append(salary_from)
+        salary_t.append(salary_to)
+        try:
+            salary_cur = vac['salary'].get('currency', '-')
+            cur.append(salary_cur)
+
+        except TypeError:
+            try:
+                salary_cur = file['objects'][0]['currency']
+                cur.append(salary_cur)
+
+            except KeyError:
+                salary_cur = ''
+                cur.append(salary_cur)
+
+        except AttributeError:
+            try:
+                salary_cur = file['objects'][0]['currency']
+                cur.append(salary_cur)
+
+            except KeyError:
+                salary_cur = ''
+                cur.append(salary_cur)
+
+        if "alternate_url" in vac:
+            urls.append(vac.get('alternate_url', 'client'))
+            responsibility = vac['snippet']['responsibility']
+
+        else:
+            try:
+                urls.append(file['objects'][0]['client']['link'])
+                responsibility = file['objects'][0]['client']['description']
+
+            except KeyError:
+                urls.append('Ошибка')
+                responsibility = file['objects'][0]['client']['description']
+        desc.append(responsibility)

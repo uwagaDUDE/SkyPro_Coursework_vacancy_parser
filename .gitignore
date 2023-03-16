@@ -3,3 +3,4 @@
 .env
 test.py
 last_search.json
+liked_vacancy.txt

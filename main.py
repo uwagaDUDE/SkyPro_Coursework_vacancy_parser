@@ -9,24 +9,27 @@ if __name__ == '__main__':
     # vacancy = scripts.GetVacancy(vc_searched, hh_vc_counter, hh_pages)
 
     vacancy = scripts.GetVacancy(vc_searched, hh_vc_counter, hh_pages)
-    vacancy.get_hh()
+    vacancy.parse()
     search_cycle = True
     vacancy.vacancy_package()
     next = 0
     # x = (max(vacancy.vacancy_salary))
     # y = vacancy.vacancy_salary.index(x)
-    while search_cycle != False:
+    with open('liked_vacancy.txt', 'r+', encoding='UTF-8') as tinder:
 
-        if next > len(vacancy.vacancy_names):
-            search_cycle = False
-            break
-        search = input(f'Ищем дальше(+/-): ')
-        if search == '+':
+        while search_cycle != False:
+
+            if next > len(vacancy.vacancy_names):
+                search_cycle = False
+                break
+            next = next+1
             print(vacancy)
+            search = input(f'Понравилась вакансия(+/-): ')
+            if search == '+':
+                tinder.writelines(f'{vacancy.vacancy_urls[next-1]}\n')
 
-        elif search == '-':
-            search_cycle = False
-            print(f'Надеюсь вы нашли что искали :)')
-        else:
-            print('Введите + либо -')
+            elif search == '-':
+                print(f'Ищем дальше :)')
+            else:
+                print('Введите + либо -')
 

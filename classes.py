@@ -3,6 +3,7 @@ import requests
 import json
 import utils as script
 
+
 class VacancyCache:
     """
     Работа с файлами связанными с вакансиями
@@ -93,6 +94,7 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
     salary_curr = []
     vacancy_dict = {}
     tick = -1
+
     def __init__(self, vacancy_name, v_count, v_page):
         """
         :param v_count: Количество вакансий (не более 20 на 1 страницу)
@@ -103,6 +105,10 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
         super(SuperJob, self).__init__(vacancy_name)
 
     def vacancy_package(self):
+        """
+        Упаковываем данные в удобный для работы словарь
+        :return:
+        """
         for package in range(0, len(self.vacancy_names)):
             self.vacancy_dict[package] = {
                 'vacancy_name':self.vacancy_names[package],
@@ -122,31 +128,28 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
         """
         with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh_file:
             hh_json = json.load(hh_file)
-            for vac in hh_json['items']:
-                self.vacancy_names.append(vac['name'])
-                if vac['salary'] is not None:
-                    salary_from = vac['salary'].get('from', '-')
-                    salary_to = vac['salary'].get('to', '-')
-                else:
-                    salary_from = '-'
-                    salary_to = '-'
-                self.vacancy_salary_from.append(salary_from)
-                self.vacancy_salary_to.append(salary_to)
-                if vac['salary'] is not None:
-                    salary_cur = vac['salary'].get('currency', '-')
-                else:
-                    salary_cur = ''
-                self.salary_curr.append(salary_cur)
-                self.vacancy_urls.append(vac['alternate_url'])
-                responsibility = vac['snippet']['responsibility']
-                if responsibility is None:
-                    self.vacancy_desc.append('Работодатель не указал описание.')
-                else:
-                    self.vacancy_desc.append(responsibility)
+            script.get_vacancy_information(hh_json, self.vacancy_names, self.vacancy_salary_from,
+                                           self.vacancy_salary_to, self.vacancy_desc,
+                                           self.vacancy_urls, self.salary_curr)
 
     def get_sj(self):
+        """
+        Заполняем атрибуты vacancy_names, vacancy_desc, vacancy_urls, vacancy_salary содержимым c superjob.ru
+        :return:
+        """
         with open('./.cache/Superjob/vacancy_list.json', 'r', encoding='UTF-8') as sj:
             sj_json = json.load(sj)
+            script.get_vacancy_information(sj_json, self.vacancy_names, self.vacancy_salary_from,
+                                               self.vacancy_salary_to, self.vacancy_desc,
+                                               self.vacancy_urls, self.salary_curr)
+
+    def parse(self):
+        """
+        Объединение двух методов
+        :return:
+        """
+        self.get_hh()
+        self.get_sj()
 
     def __str__(self):
         """
@@ -165,10 +168,7 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
                        f'до {search[str(tick)]["vacancy_salary"]["to"]} {search[str(tick)]["vacancy_salary"]["cur"]}\n' \
                        f'Ссылка на вакансию: {search[str(tick)]["vacancy_url"]}'
             except Exception:
-                return f'123'
-
-
-
+                return f'Ошибка вывода информации'
 
 
 class AllErrors(Exception):
