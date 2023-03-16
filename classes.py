@@ -3,6 +3,7 @@ import requests
 import json
 import utils as script
 
+
 class VacancyCache:
     """
     Работа с файлами связанными с вакансиями
@@ -17,13 +18,11 @@ class VacancyCache:
                 pass
             else:
                 os.mkdir('./.cache/HHru')
-
             #Проверяем наличие папки хранящей вакансии с Superjob
             if os.path.exists('./.cache/Superjob'):
                 pass
             else:
                 os.mkdir('./.cache/Superjob')
-
         else:
             os.mkdir('./.cache')
             os.mkdir('./.cache/Superjob')
@@ -50,20 +49,13 @@ class HeadHunterParse(SearchedVacancy):
         """
         super().__init__(vacancy_name)
         parametres = {'per_page':v_count,'page':v_page}
-        self.vacancy_list = requests.get(f'https://api.hh.ru/vacancies?text={vacancy_name}'
+        request = requests.get(f'https://api.hh.ru/vacancies?text={vacancy_name}'
                                          f'&area=1'
                                          f'&search_field=name',
                                          parametres)
-        if self.vacancy_list.status_code == 200:
 
-            try:
-                with open('./.cache/HHru/vacancy_list.json', 'w', encoding='UTF-8') as hh:
-                    vacancy_json = self.vacancy_list.json()
-                    hh.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
-
-            except Exception as Error:
-                print(f'Произошла ошибка:'
-                      f'{Error}')
+        if request.status_code == 200:
+            script.open_file('HHru', request)
         else:
             print('Ошибка подключения.')
 
@@ -85,9 +77,7 @@ class SuperJob(SearchedVacancy):
                                          params=params)
 
         if self.vacancy_list.status_code == 200:
-            with open('./.cache/Superjob/vacancy_list.json', 'w', encoding='UTF-8') as sj:
-                vacancy_json = self.vacancy_list.json()
-                sj.write(json.dumps(vacancy_json, indent=2, ensure_ascii=False))
+            script.open_file('Superjob', self.vacancy_list)
         else:
             print('Ошибка подключения')
 
@@ -99,7 +89,11 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
     vacancy_names = []
     vacancy_desc = []
     vacancy_urls = []
-    vacancy_salary = []
+    vacancy_salary_from = []
+    vacancy_salary_to = []
+    salary_curr = []
+    vacancy_dict = {}
+    tick = -1
 
     def __init__(self, vacancy_name, v_count, v_page):
         """
@@ -110,43 +104,71 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
         super(HeadHunterParse, self).__init__(vacancy_name)
         super(SuperJob, self).__init__(vacancy_name)
 
+    def vacancy_package(self):
+        """
+        Упаковываем данные в удобный для работы словарь
+        :return:
+        """
+        for package in range(0, len(self.vacancy_names)):
+            self.vacancy_dict[package] = {
+                'vacancy_name':self.vacancy_names[package],
+                'vacancy_description':self.vacancy_desc[package],
+                'vacancy_salary':{'from':self.vacancy_salary_from[package],
+                                  'to':self.vacancy_salary_to[package],
+                                  'cur':self.salary_curr[package]},
+                'vacancy_url':self.vacancy_urls[package]
+            }
+        with open('last_search.json', 'w', encoding='UTF-8') as package:
+            package.write(json.dumps(self.vacancy_dict, indent=2, ensure_ascii=False))
+
     def get_hh(self):
         """
-        Заполняем атрибуты  vacancy_names, vacancy_desc, vacancy_urls, vacancy_salary содержимым
+        Заполняем атрибуты vacancy_names, vacancy_desc, vacancy_urls, vacancy_salary содержимым c hh.ru
         :return:
         """
-        with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh:
-            hh_json = json.load(hh)
+        with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh_file:
+            hh_json = json.load(hh_file)
+            script.get_vacancy_information(hh_json, self.vacancy_names, self.vacancy_salary_from,
+                                           self.vacancy_salary_to, self.vacancy_desc,
+                                           self.vacancy_urls, self.salary_curr)
 
-            for vacs in hh_json['items']:
-                self.vacancy_names.append(vacs['name'])
-                try:
-                    self.vacancy_salary.append(f"От {vacs['salary']['from']} {vacs['salary']['currency']}")
-                except TypeError:
-                    try:
-                        self.vacancy_salary.append(f"До {vacs['salary']['from']} {vacs['salary']['currency']}")
-                    except TypeError:
-                        self.vacancy_salary.append(f'Зарплата не указана')
-                self.vacancy_urls.append(vacs['alternate_url'])
-                if vacs['snippet']['responsibility'] == None:
-                    self.vacancy_desc.append(f'Работодатель не указал описание.')
-                else:
-                    self.vacancy_desc.append(vacs['snippet']['responsibility'])
+    def get_sj(self):
+        """
+        Заполняем атрибуты vacancy_names, vacancy_desc, vacancy_urls, vacancy_salary содержимым c superjob.ru
+        :return:
+        """
+        with open('./.cache/Superjob/vacancy_list.json', 'r', encoding='UTF-8') as sj:
+            sj_json = json.load(sj)
+            script.get_vacancy_information(sj_json, self.vacancy_names, self.vacancy_salary_from,
+                                               self.vacancy_salary_to, self.vacancy_desc,
+                                               self.vacancy_urls, self.salary_curr)
 
+    def parse(self):
+        """
+        Объединение двух методов
+        :return:
+        """
+        self.get_hh()
+        self.get_sj()
 
-    def information_output(self, next):
+    def __str__(self):
         """
         Вывод информации
-        :param next: Для перебора списка вакансий, можно конечно было через for, но я вспомнил о нем только когда писал этот докстринг
         :return:
         """
-        return f'Вакансия: {self.vacancy_names[next]}\n' \
-               f'Описание: {self.vacancy_desc[next]}\n' \
-               f'Заработная плата: {self.vacancy_salary[next]}\n' \
-               f'Ссылка на вакансию: {self.vacancy_urls[next]}'
-
-
-
+        with open('last_search.json', 'r', encoding='UTF-8') as loader:
+            search = json.load(loader)
+            try:
+                self.tick = self.tick+1
+                tick = self.tick
+                return f'\n' \
+                     f'Вакансия: {search[str(tick)]["vacancy_name"]}\n' \
+                       f'Описание: {search[str(tick)]["vacancy_description"]}\n' \
+                       f'Заработная плата: от {search[str(tick)]["vacancy_salary"]["from"]} ' \
+                       f'до {search[str(tick)]["vacancy_salary"]["to"]} {search[str(tick)]["vacancy_salary"]["cur"]}\n' \
+                       f'Ссылка на вакансию: {search[str(tick)]["vacancy_url"]}'
+            except Exception:
+                return f'Ошибка вывода информации'
 
 
 class AllErrors(Exception):
@@ -165,7 +187,6 @@ class AllErrors(Exception):
                 raise Exception(f'Ошибка ввода ключа, попробуйте ввести его вручную.')
 
     class CacheError(Exception):
-
         def __init__(self):
             raise Exception(f'Файла с кэшом не найдено.')
 
