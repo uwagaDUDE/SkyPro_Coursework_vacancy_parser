@@ -128,9 +128,8 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
         """
         with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh_file:
             hh_json = json.load(hh_file)
-            script.get_vacancy_information(hh_json, self.vacancy_names, self.vacancy_salary_from,
-                                           self.vacancy_salary_to, self.vacancy_desc,
-                                           self.vacancy_urls, self.salary_curr)
+            script.get_vacancy_information(hh_json, self.vacancy_names, self.vacancy_urls, self.vacancy_desc,
+                                           self.vacancy_salary_from, self.vacancy_salary_to, self.salary_curr)
 
     def get_sj(self):
         """
@@ -139,9 +138,8 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
         """
         with open('./.cache/Superjob/vacancy_list.json', 'r', encoding='UTF-8') as sj:
             sj_json = json.load(sj)
-            script.get_vacancy_information(sj_json, self.vacancy_names, self.vacancy_salary_from,
-                                               self.vacancy_salary_to, self.vacancy_desc,
-                                               self.vacancy_urls, self.salary_curr)
+            script.get_vacancy_information(sj_json, self.vacancy_names, self.vacancy_desc, self.vacancy_urls,
+                                           self.vacancy_salary_from, self.vacancy_salary_to, self.salary_curr)
 
     def parse(self):
         """
