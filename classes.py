@@ -64,14 +64,15 @@ class SuperJob(SearchedVacancy):
     """
     Класс обработки получаемой информации с сайта superjob.ru
     """
-    def __init__(self, vacancy_name):
+    def __init__(self, vacancy_name, v_count=100):
         """
         :param vacancy_name: Название вакансии
         """
         super().__init__(vacancy_name)
         api_key = script.api_loader()
         headers = {"X-Api-App-Id": api_key}
-        params = {"keyword": f"{vacancy_name}"}
+        params = {"keyword": f"{vacancy_name}",
+                "count":v_count}
         self.vacancy_list = requests.get(f'https://api.superjob.ru/2.0/vacancies/',
                                          headers=headers,
                                          params=params)
@@ -128,7 +129,7 @@ class GetVacancy(HeadHunterParse, SuperJob, VacancyCache):
         """
         with open('./.cache/HHru/vacancy_list.json', 'r', encoding='UTF-8') as hh_file:
             hh_json = json.load(hh_file)
-            script.get_vacancy_information(hh_json, self.vacancy_names, self.vacancy_urls, self.vacancy_desc,
+            script.get_vacancy_information(hh_json, self.vacancy_names, self.vacancy_desc, self.vacancy_urls,
                                            self.vacancy_salary_from, self.vacancy_salary_to, self.salary_curr)
 
     def get_sj(self):
