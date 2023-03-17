@@ -26,7 +26,7 @@ if __name__ == '__main__':
             print(vacancy)
             search = input(f'Понравилась вакансия(+/-): ')
             if search == '+':
-                tinder.writelines(f'{vacancy.vacancy_urls[next-1]}\n')
+                tinder.writelines(f'{vacancy.vacancy_urls[next-1]}\n') #TODO Доделать механнику как в Tinder
 
             elif search == '-':
                 print(f'Ищем дальше :)')
