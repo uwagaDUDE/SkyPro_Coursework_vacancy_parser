@@ -57,78 +57,43 @@ def open_file(folder, request):
         print(f'Произошла ошибка:'
               f'{Error}')
 
-def get_vacancy_information(file, names, salary_f, salary_t, desc, urls, cur):
+def get_vacancy_information(file, v_name, v_desc, v_url, v_salary_from, v_salary_to, v_salary_cur):
     """
     :param file: Атрибут файла
-    :param names: Атрибут списка содержащий названия вакансий
-    :param salary_f: Атрбиут зп ОТ
-    :param salary_t: Атрибут зп ДО
-    :param desc: Атрибут описания вакансии
-    :param urls: Атрибут ссылки на вакансию
-    :param cur: Атрибут валюты
+    :param v_name: Атрибут списка содержащий названия вакансий
+    :param v_salary_from: Атрбиут зп ОТ
+    :param v_salary_to: Атрибут зп ДО
+    :param v_desc: Атрибут описания вакансии
+    :param v_url: Атрибут ссылки на вакансию
+    :param v_salary_cur: Атрибут валюты
     :return:
     """
-
-    for vac in file.get('items', 'objects'):
-        if 'name' in vac:
-            names.append(vac.get('name'))
-        else:
-            names.append(file['objects'][0]['profession'])
-
-        try:
-            salary_from = vac['salary'].get('from')
-            salary_to = vac['salary'].get('to')
-
-        except AttributeError:
+    try:
+        for vac in file['items']:
+            v_name.append(vac['name'])
+            v_desc.append(vac['snippet']['responsibility'])
+            v_url.append(vac['alternate_url'])
             try:
-                salary_from = file['objects'][0]['payment_from']
-                salary_to = file['objects'][0]['payment_to']
+                if vac['salary']['from'] == None:
+                    v_salary_from.append('0')
+                else:
+                    v_salary_from.append(vac['salary']['from'])
+                if vac['salary']['to'] == None:
+                    v_salary_to.append('не указано')
+                else:
+                    v_salary_to.append(vac['salary']['to'])
+                v_salary_cur.append(vac['salary']['currency'])
+            except TypeError:
+                v_salary_from.append('не указано')
+                v_salary_to.append('не указано')
+                v_salary_cur.append('')
 
-            except KeyError:
-                salary_from, salary_to = 'Не указано', 'Не указано'
+    except KeyError:
+        for vac in file['objects']:
+            v_name.append(vac['profession'])
+            v_desc.append(vac["candidat"])
+            v_url.append(vac["client"]["link"])
+            v_salary_from.append(vac["payment_from"])
+            v_salary_to.append(vac["payment_to"])
+            v_salary_cur.append(vac["currency"])
 
-        except TypeError:
-            try:
-                salary_from = file['objects'][0]['payment_from']
-                salary_to = file['objects'][0]['payment_to']
-
-            except KeyError:
-                salary_from, salary_to = 'Не указано', 'Не указано'
-
-        salary_f.append(salary_from)
-        salary_t.append(salary_to)
-        try:
-            salary_cur = vac['salary'].get('currency', '-')
-            cur.append(salary_cur)
-
-        except TypeError:
-            try:
-                salary_cur = file['objects'][0]['currency']
-                cur.append(salary_cur)
-
-            except KeyError:
-                salary_cur = ''
-                cur.append(salary_cur)
-
-        except AttributeError:
-            try:
-                salary_cur = file['objects'][0]['currency']
-                cur.append(salary_cur)
-
-            except KeyError:
-                salary_cur = ''
-                cur.append(salary_cur)
-
-        if "alternate_url" in vac:
-            urls.append(vac.get('alternate_url', 'client'))
-            responsibility = vac['snippet']['responsibility']
-
-        else:
-            try:
-                urls.append(file['objects'][0]['client']['link'])
-                responsibility = file['objects'][0]['client']['description']
-
-            except KeyError:
-                urls.append('Ошибка')
-                responsibility = 'Ошибка'
-        desc.append(responsibility)
