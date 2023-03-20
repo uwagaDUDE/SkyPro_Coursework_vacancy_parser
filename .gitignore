@@ -4,3 +4,5 @@
 test.py
 last_search.json
 liked_vacancy.txt
+/.cache.json
+/current_vacancy.json
