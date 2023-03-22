@@ -17,18 +17,53 @@ def api_loader():
         raise cl.AllErrors().ApiKeyError(api_key)
 
 
-def original_dict(cl, name, desc, v_f, v_c, v_t, v_u):
-    cl.vacancy_list.append({
-        'id':cl.num_id,
-        'vacancy_name': name,
-        'vacancy_description': desc,
-        'vacancy_salary': {'from': v_f,
-                           'to': v_t,
-                           'cur': v_c},
-        'vacancy_url': v_u
-         })
-    cl.num_id = cl.num_id+1
-    return cl
+def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp):
+    """
+    :param cl: Название класса работы с вакансиями, в нашем случае - Vacancy
+    :param name: Название вакансии
+    :param desc: Описание вакансии
+    :param v_f: Зарплата ОТ
+    :param v_c: Зарплата валюта
+    :param v_t: Зарплата ДО
+    :param v_u: Ссылка на вакансию
+    :param v_id: ID вакансии, предоставляемое сайтом
+    :param v_emp: Работодатель
+    :return:
+    """
+    vacancy_filter = set()
+    try:
+        for i in cl.vacancy_dict['items']:
+            vacancy_filter.add((i['vacancy_name'], i['vacancy_emp']))
+        if (name, v_emp) in vacancy_filter:
+            pass
+        else:
+            cl.vacancy_list.append({
+                    'my_id':cl.num_id,
+                    'self_id':v_id,
+                    'vacancy_name': name,
+                    'vacancy_description': desc,
+                    'vacancy_salary': {'from': v_f,
+                                       'to': v_t,
+                                       'cur': v_c},
+                    'vacancy_url': v_u,
+                    'vacancy_emp': v_emp
+                     })
+            cl.num_id = cl.num_id+1
+            return cl
+    except KeyError:
+        cl.vacancy_list.append({
+            'my_id': cl.num_id,
+            'self_id': v_id,
+            'vacancy_name': name,
+            'vacancy_description': desc,
+            'vacancy_salary': {'from': v_f,
+                               'to': v_t,
+                               'cur': v_c},
+            'vacancy_url': v_u,
+            'vacancy_emp': v_emp
+        })
+        cl.num_id = cl.num_id + 1
+        return cl
 
 
 def package(vacancy_list, cl):
@@ -40,9 +75,14 @@ def package(vacancy_list, cl):
     """
     try:
         for vac in vacancy_list['items']:
+            v_id = vac['id']
             v_name = vac['name']
-            v_desc = vac['snippet']['responsibility']
+            if vac['snippet']['responsibility'] == None:
+                v_desc = 'Описание не указано'
+            else:
+                v_desc = vac['snippet']['responsibility']
             v_url = vac['alternate_url']
+            v_emp = vac['employer']['name']
             try:
                 if vac['salary']['from'] == None:
                     v_salary_from = 0
@@ -57,27 +97,37 @@ def package(vacancy_list, cl):
                 v_salary_from = 'не указано'
                 v_salary_to = 'не указано'
                 v_salary_cur = ''
-            original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url)
+            original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url, v_id, v_emp)
 
     except KeyError:
         for vac in vacancy_list['objects']:
             v_name = vac['profession']
+            v_id = vac['id']
             v_desc = vac["candidat"]
             v_salary_from = vac["payment_from"]
             v_salary_to = vac["payment_to"]
             v_salary_cur = vac["currency"]
+            v_emp = vac['firm_name']
             try:
                 v_url = vac["link"]
             except KeyError:
                 v_url = ('не рабочая ссылка :(')
-            original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url)
+            original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url, v_id, v_emp)
     with open('./.cache.json', 'w', encoding='UTF-8') as file:
         cl.vacancy_dict['items'] = cl.vacancy_list
         wrt = json.dumps(cl.vacancy_dict, indent=2, ensure_ascii=False)
         file.write(wrt)
 
 
-def liked_proffesion(user_like):
+# def anti_double(cl, vc_name, vc_emp):
+#     for i in cl.vacancy_dict['items']:
+#         if vc_name in i and vc_emp in i:
+#             pass
+#         else:
+
+
+
+def liked_proffesion(user_like, cl):
     """
     Проверка, понравилась ли последняя вакансия пользователю
     :param user_like: ответ пользователя
@@ -91,8 +141,18 @@ def liked_proffesion(user_like):
         try:
             with open('last_search.json', "r", encoding='UTF-8') as last:
                 last_load = json.load(last)
+                cl.like_id.append(last_load['self_id'])
                 with open('./liked_vacancy.txt', "a", encoding='UTF-8') as liked:
                     liked.write(f"{last_load['vacancy_name']}:{last_load['vacancy_url']}\n")
                     return ('Ищем дальше :)')
         except Exception:
             print('Error')
+
+
+def max_salary():
+    max_sal = []
+    with open('.cache.json', "r", encoding='UTF-8') as max_salary:
+        json_dict = json.load(max_salary)
+        for item in json_dict:
+            max_sal.append(json_dict[item]['salary']['to'])
+        return max(max_sal)

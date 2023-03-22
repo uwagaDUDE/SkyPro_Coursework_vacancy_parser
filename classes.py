@@ -1,75 +1,66 @@
-import os
 import random
-
 import requests
 import json
 import utils as script
 
-class SearchedVacancy:
-    def __init__(self, vacancy_name):
+
+class HeadHunter:
+    """
+    Класс получения и кэширования информации с сайта hh.ru
+    """
+    counter = 0 # Для перебора по страницам, перебор начинается с 0 страницы
+    def __init__(self, vacancy_name, v_count=100):
         """
+        :param v_count: Количество вакансий, не более 20 на 1 странице!.
         :param vacancy_name: Название искомой вакансии
         """
-        self.vacancy_name = vacancy_name
+        while self.counter != 10:
+            parametres = {'per_page': v_count, 'page': self.counter}
+            self.vacancy_list = requests.get(f'https://api.hh.ru/vacancies?text={vacancy_name}'
+                                   f'&area=1'
+                                   f'&search_field=name',
+                                   parametres)
+
+            if self.vacancy_list.status_code == 200:
+                vacancy_list = self.vacancy_list.json()
+                script.package(vacancy_list, Vacancy)
+            self.counter += 1
+
+
+class SuperJob:
+    """
+    Класс обработки получаемой информации с сайта superjob.ru
+    """
+    counter = 0  # Для перебора по страницам, перебор начинается с 0 страницы
+    def __init__(self, vacancy_name, v_count=100):
+        """
+        :param vacancy_name: Название вакансии
+        """
+        api_key = script.api_loader()
+        headers = {"X-Api-App-Id": api_key}
+        while self.counter != 10:  # Цикл для выдачи вакансий больше чем позволяет API
+            params = {"keyword": f"{vacancy_name}",
+                  "count": v_count,
+                  "page":self.counter}  # Счетчик вставляем в страницу, чтобы вакансии обновлялись при запросе
+            self.vacancy_list = requests.get(f'https://api.superjob.ru/2.0/vacancies/',
+                                             headers=headers,
+                                             params=params)
+
+            if self.vacancy_list.status_code == 200:
+                vacancy_list = self.vacancy_list.json()
+                script.package(vacancy_list, Vacancy)
+            self.counter += 1
 
 
 class Vacancy:
     """
-    Класс работы с вакансиями, содержит в себе классы HeadHunter и SuperJob
+    Класс работы с вакансиями
     """
 
     vacancy_dict = {}
     vacancy_list = []
     num_id = 0
-    class HeadHunter(SearchedVacancy):
-        """
-        Класс получения и кэширования информации с сайта hh.ru
-        """
-        counter = 0 # Для перебора по страницам, перебор начинается с 0 страницы
-        def __init__(self, vacancy_name, v_count=100):
-            """
-            :param v_count: Количество вакансий, не более 20 на 1 странице!.
-            :param v_page: Количество страниц, на 1 странице не более 20 вакансий.
-            :param vacancy_name: Название искомой вакансии
-            """
-            super().__init__(vacancy_name)
-            while self.counter != 10:
-                parametres = {'per_page': v_count, 'page': self.counter}
-                self.vacancy_list = requests.get(f'https://api.hh.ru/vacancies?text={vacancy_name}'
-                                       f'&area=1'
-                                       f'&search_field=name',
-                                       parametres)
-
-                if self.vacancy_list.status_code == 200:
-                    vacancy_list = self.vacancy_list.json()
-                    script.package(vacancy_list, Vacancy)
-                self.counter += 1
-
-    class SuperJob(SearchedVacancy):
-        """
-        Класс обработки получаемой информации с сайта superjob.ru
-        """
-        counter = 0  # Для перебора по страницам, перебор начинается с 0 страницы
-        def __init__(self, vacancy_name, v_count=100):
-            """
-            :param vacancy_name: Название вакансии
-            """
-            super().__init__(vacancy_name)
-
-            api_key = script.api_loader()
-            headers = {"X-Api-App-Id": api_key}
-            while self.counter != 10:
-                params = {"keyword": f"{vacancy_name}",
-                      "count": v_count,
-                      "page":self.counter}
-                self.vacancy_list = requests.get(f'https://api.superjob.ru/2.0/vacancies/',
-                                                 headers=headers,
-                                                 params=params)
-
-                if self.vacancy_list.status_code == 200:
-                    vacancy_list = self.vacancy_list.json()
-                    script.package(vacancy_list, Vacancy)
-                self.counter += 1
+    like_id = []
 
     def __init__(self, name):
         """
@@ -81,7 +72,7 @@ class Vacancy:
         """
         Инициализирует классы HeadHunter и SuperJob
         """
-        self.HeadHunter(self.name), self.SuperJob(self.name)
+        HeadHunter(self.name), SuperJob(self.name)
 
     def __str__(self):
         """
@@ -99,7 +90,8 @@ class Vacancy:
                    f'Описание: {random_vacancy["vacancy_description"]}\n' \
                    f'Зарплата: от {random_vacancy["vacancy_salary"]["from"]} ' \
                    f'до {random_vacancy["vacancy_salary"]["to"]} {random_vacancy["vacancy_salary"]["cur"]}\n' \
-                   f'Ссылка: {random_vacancy["vacancy_url"]}'
+                   f'Ссылка: {random_vacancy["vacancy_url"]}\n' \
+                   f'Работодатель: {random_vacancy["vacancy_emp"]}'
             except Exception:
                 raise AllErrors.UnknowVacancie()
 

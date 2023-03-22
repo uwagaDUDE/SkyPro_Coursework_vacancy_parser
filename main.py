@@ -9,7 +9,9 @@ if __name__ == '__main__':
         vacancy = scripts.Vacancy(vc_searched)
         print(f'\n{vacancy}')
         print('\nПонравилась вакансия?')
-        user_like = input(f'(Да/нет/stop): ')
+        user_like = input(f'(Да/нет/stop/max): ')
         if user_like.lower() == 'stop':
             cycle = False
-        print(functions.liked_proffesion(user_like))
+        elif user_like.lower() == 'max':  # Не работает на данный момент
+            functions.max_salary()
+        print(functions.liked_proffesion(user_like, vacancy))
