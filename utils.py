@@ -1,6 +1,6 @@
 import requests
-import classes as cl
 import json
+from data import errors as Error
 
 
 def api_loader():
@@ -14,7 +14,7 @@ def api_loader():
         return api_key
     except Exception:
         api_key = None
-        raise cl.AllErrors().ApiKeyError(api_key)
+        raise Error.ApiKeyError(api_key)
 
 
 def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp):
@@ -142,11 +142,11 @@ def liked_proffesion(user_like, cl):
             with open('last_search.json', "r", encoding='UTF-8') as last:
                 last_load = json.load(last)
                 cl.like_id.append(last_load['self_id'])
-                with open('./liked_vacancy.txt', "a", encoding='UTF-8') as liked:
+                with open('./liked_vacancy.json', "a", encoding='UTF-8') as liked:
                     liked.write(f"{last_load['vacancy_name']}:{last_load['vacancy_url']}\n")
-                    return ('Ищем дальше :)')
+                    return f'Ищем дальше :)'
         except Exception:
-            print('Error')
+            raise Error.UnavalibleLike()
 
 
 def max_salary():

@@ -12,6 +12,7 @@ if __name__ == '__main__':
         user_like = input(f'(Да/нет/stop/max): ')
         if user_like.lower() == 'stop':
             cycle = False
+            print('Надеюсь вы нашли что искали :)')
         elif user_like.lower() == 'max':  # Не работает на данный момент
             functions.max_salary()
-        print(functions.liked_proffesion(user_like, vacancy))
+        functions.liked_proffesion(user_like, vacancy)
