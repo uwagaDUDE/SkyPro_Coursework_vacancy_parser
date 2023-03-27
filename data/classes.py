@@ -1,14 +1,14 @@
 import random
 import requests
 import json
-import utils as script
-from data import errors as Error
+from data import errors as Error, utils as script
+
 
 class HeadHunter:
     """
     Класс получения и кэширования информации с сайта hh.ru
     """
-    counter = 0 # Для перебора по страницам, перебор начинается с 0 страницы
+    counter = 0  # Для перебора по страницам, перебор начинается с 0 страницы
     def __init__(self, vacancy_name, v_count=100):
         """
         :param v_count: Количество вакансий, не более 20 на 1 странице!.
@@ -78,7 +78,7 @@ class Vacancy:
         """
         :return: Вывод информации
         """
-        with open('last_search.json', 'w', encoding='UTF-8') as last_vac:
+        with open('../last_search.json', 'w', encoding='UTF-8') as last_vac:
             try:
                     random_vacancy = self.vacancy_dict['items'][random.randint(0, len(self.vacancy_dict['items']))]
                     x = json.dumps(random_vacancy, indent=2, ensure_ascii=False)
