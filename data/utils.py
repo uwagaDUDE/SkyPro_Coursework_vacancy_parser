@@ -1,6 +1,6 @@
 import requests
-import classes as cl
 import json
+from data import errors as Error
 
 
 def api_loader():
@@ -14,7 +14,7 @@ def api_loader():
         return api_key
     except Exception:
         api_key = None
-        raise cl.AllErrors().ApiKeyError(api_key)
+        raise Error.ApiKeyError(api_key)
 
 
 def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp):
@@ -113,18 +113,10 @@ def package(vacancy_list, cl):
             except KeyError:
                 v_url = ('не рабочая ссылка :(')
             original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url, v_id, v_emp)
-    with open('./.cache.json', 'w', encoding='UTF-8') as file:
+    with open('../.cache.json', 'w', encoding='UTF-8') as file:
         cl.vacancy_dict['items'] = cl.vacancy_list
         wrt = json.dumps(cl.vacancy_dict, indent=2, ensure_ascii=False)
         file.write(wrt)
-
-
-# def anti_double(cl, vc_name, vc_emp):
-#     for i in cl.vacancy_dict['items']:
-#         if vc_name in i and vc_emp in i:
-#             pass
-#         else:
-
 
 
 def liked_proffesion(user_like, cl):
@@ -139,20 +131,57 @@ def liked_proffesion(user_like, cl):
                    'lF', 'LF']
     if user_like.lower() in yes_answers:
         try:
-            with open('last_search.json', "r", encoding='UTF-8') as last:
+            with open('../last_search.json', "r", encoding='UTF-8') as last:
                 last_load = json.load(last)
                 cl.like_id.append(last_load['self_id'])
-                with open('./liked_vacancy.txt', "a", encoding='UTF-8') as liked:
+                with open('./liked_vacancy.json', "a", encoding='UTF-8') as liked:
                     liked.write(f"{last_load['vacancy_name']}:{last_load['vacancy_url']}\n")
-                    return ('Ищем дальше :)')
+                    return f'Ищем дальше :)'
         except Exception:
-            print('Error')
+            raise Error.UnavalibleLike()
+
+
+def usd_converter():
+    usd_get = requests.get('https://www.cbr-xml-daily.ru/daily_json.js')
+    valute_dict = usd_get.json()
+    usd_price = valute_dict['Valute']['USD']['Value']
+    return int(usd_price)
 
 
 def max_salary():
-    max_sal = []
-    with open('.cache.json', "r", encoding='UTF-8') as max_salary:
+    """
+    Выводит вакансию с максимальной заработной платой, с учетом конвертации из долларов в рубли.
+    :return: Вакансия с максимальной ЗП
+    """
+    sal_list = []
+    sal_list_ids = []
+    with open('../.cache.json', "r", encoding='UTF-8') as max_salary:
         json_dict = json.load(max_salary)
-        for item in json_dict:
-            max_sal.append(json_dict[item]['salary']['to'])
-        return max(max_sal)
+        for item in json_dict['items']:
+            if item["vacancy_salary"]['to'] == 'не указано' or item["vacancy_salary"]['to'] == 0:
+                pass
+            else:
+                max_sal = item["vacancy_salary"]['to']
+                max_sal_id = item["self_id"]
+                if item['vacancy_salary']['cur'] == 'USD':
+                    try:
+                        max_sal = item["vacancy_salary"]['to']*usd_converter()
+                    except Exception:
+                        max_sal = item["vacancy_salary"]['from']*usd_converter()
+
+                sal_list_ids.append(max_sal_id)
+                sal_list.append(max_sal)
+        x = max(sal_list)
+        y = sal_list.index(x)
+        for sal in json_dict['items']:
+            if sal_list_ids[y] == sal['self_id']:
+                return f'Вакансия: {sal["vacancy_name"]}\n' \
+                   f'Описание: {sal["vacancy_description"]}\n' \
+                   f'Зарплата: от {sal["vacancy_salary"]["from"]} ' \
+                   f'до {sal["vacancy_salary"]["to"]} {sal["vacancy_salary"]["cur"]}\n' \
+                   f'Ссылка: {sal["vacancy_url"]}\n' \
+                   f'Работодатель: {sal["vacancy_emp"]}'
+
+
+if __name__ == '__main__':  # Для тестовых запусков
+    print(max_salary())

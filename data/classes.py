@@ -1,14 +1,14 @@
 import random
 import requests
 import json
-import utils as script
+from data import errors as Error, utils as script
 
 
 class HeadHunter:
     """
     Класс получения и кэширования информации с сайта hh.ru
     """
-    counter = 0 # Для перебора по страницам, перебор начинается с 0 страницы
+    counter = 0  # Для перебора по страницам, перебор начинается с 0 страницы
     def __init__(self, vacancy_name, v_count=100):
         """
         :param v_count: Количество вакансий, не более 20 на 1 странице!.
@@ -37,7 +37,7 @@ class SuperJob:
         :param vacancy_name: Название вакансии
         """
         api_key = script.api_loader()
-        headers = {"X-Api-App-Id": api_key}
+        headers = {"X-Api-App-Id": api_key}  # Можно ввести свой ключ сюда
         while self.counter != 10:  # Цикл для выдачи вакансий больше чем позволяет API
             params = {"keyword": f"{vacancy_name}",
                   "count": v_count,
@@ -78,13 +78,13 @@ class Vacancy:
         """
         :return: Вывод информации
         """
-        with open('last_search.json', 'w', encoding='UTF-8') as last_vac:
+        with open('../last_search.json', 'w', encoding='UTF-8') as last_vac:
             try:
                     random_vacancy = self.vacancy_dict['items'][random.randint(0, len(self.vacancy_dict['items']))]
                     x = json.dumps(random_vacancy, indent=2, ensure_ascii=False)
                     last_vac.write(x)
             except IndexError:
-                raise AllErrors.UnknowVacancie()
+                raise Error.UnknowVacancie()
             try:
                 return f'Вакансия: {random_vacancy["vacancy_name"]}\n' \
                    f'Описание: {random_vacancy["vacancy_description"]}\n' \
@@ -93,40 +93,4 @@ class Vacancy:
                    f'Ссылка: {random_vacancy["vacancy_url"]}\n' \
                    f'Работодатель: {random_vacancy["vacancy_emp"]}'
             except Exception:
-                raise AllErrors.UnknowVacancie()
-
-
-class AllErrors(Exception):
-    """
-    Класс включающий в себя классы ошибок
-    """
-    class ApiKeyError(Exception):
-        """
-        Ошибка ввода ключа
-        """
-        def __init__(self, api_key):
-            """
-            :param api_key: API ключ
-            """
-            if api_key == None:
-                raise Exception(f'Ошибка ввода ключа, попробуйте ввести его вручную.')
-
-    class CacheError(Exception):
-        def __init__(self):
-            raise Exception(f'Файла с кэшом не найдено.')
-
-    class WrongInput(Exception):
-        def __init__(self):
-            raise Exception(f'Ошибка ввода! Вводите только цифры!')
-
-    class WrongMaxValue(Exception):
-        def __init__(self):
-            raise Exception(f'Вакансий должно быть не больше 20 на 1 странице!')
-
-    class WrongMaxVacancies(Exception):
-        def __init__(self):
-            raise Exception(f'Всего количество вакансий не должно превышать 2000!')
-
-    class UnknowVacancie(Exception):
-        def __init__(self):
-            raise Exception(f'Такой вакансии не найдено.')
+                raise Error.UnknowVacancie()
