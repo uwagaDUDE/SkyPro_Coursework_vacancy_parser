@@ -1,6 +1,7 @@
 import random
 import requests
 import json
+import os
 from data import errors as Error, utils as script
 
 
@@ -78,7 +79,7 @@ class Vacancy:
         """
         :return: Вывод информации
         """
-        with open('../last_search.json', 'w', encoding='UTF-8') as last_vac:
+        with open('./last_search.json', 'w', encoding='UTF-8') as last_vac:
             try:
                     random_vacancy = self.vacancy_dict['items'][random.randint(0, len(self.vacancy_dict['items']))]
                     x = json.dumps(random_vacancy, indent=2, ensure_ascii=False)
@@ -94,3 +95,6 @@ class Vacancy:
                    f'Работодатель: {random_vacancy["vacancy_emp"]}'
             except Exception:
                 raise Error.UnknowVacancie()
+
+if __name__ == '__main__':
+    DataBase('5772')

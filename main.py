@@ -1,9 +1,10 @@
 from data import utils as functions, classes as scripts
+import asyncio
 
 cycle = True
 if __name__ == '__main__':
     vc_searched = input(f'Введите название искомой вакансии: ')
-    scripts.Vacancy(vc_searched).start()  # Инициализация программы
+    scripts.Vacancy(vc_searched).start()
     while cycle != False:
         vacancy = scripts.Vacancy(vc_searched)
         print(f'\n{vacancy}')

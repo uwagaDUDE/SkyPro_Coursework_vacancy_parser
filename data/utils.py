@@ -1,7 +1,12 @@
 import requests
 import json
 from data import errors as Error
+import asyncio
+from data import classes as CLS
+async def loading_print():
 
+    print('Загрузка...')
+    await asyncio.sleep(3)
 
 def api_loader():
     """
@@ -113,7 +118,7 @@ def package(vacancy_list, cl):
             except KeyError:
                 v_url = ('не рабочая ссылка :(')
             original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url, v_id, v_emp)
-    with open('../.cache.json', 'w', encoding='UTF-8') as file:
+    with open('./.cache.json', 'w', encoding='UTF-8') as file:
         cl.vacancy_dict['items'] = cl.vacancy_list
         wrt = json.dumps(cl.vacancy_dict, indent=2, ensure_ascii=False)
         file.write(wrt)
@@ -131,7 +136,7 @@ def liked_proffesion(user_like, cl):
                    'lF', 'LF']
     if user_like.lower() in yes_answers:
         try:
-            with open('../last_search.json', "r", encoding='UTF-8') as last:
+            with open('./last_search.json', "r", encoding='UTF-8') as last:
                 last_load = json.load(last)
                 cl.like_id.append(last_load['self_id'])
                 with open('./liked_vacancy.json', "a", encoding='UTF-8') as liked:
@@ -155,7 +160,7 @@ def max_salary():
     """
     sal_list = []
     sal_list_ids = []
-    with open('../.cache.json', "r", encoding='UTF-8') as max_salary:
+    with open('./.cache.json', "r", encoding='UTF-8') as max_salary:
         json_dict = json.load(max_salary)
         for item in json_dict['items']:
             if item["vacancy_salary"]['to'] == 'не указано' or item["vacancy_salary"]['to'] == 0:
@@ -184,4 +189,9 @@ def max_salary():
 
 
 if __name__ == '__main__':  # Для тестовых запусков
-    print(max_salary())
+    async def test():
+        CLS.Vacancy('Developer').start()
+
+
+    async def main():
+        await asyncio.gather(loading_print(), test())
