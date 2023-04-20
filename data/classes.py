@@ -2,13 +2,66 @@ import random
 import requests
 import json
 from data import errors as Error, utils as script
+import psycopg2
 
+class DataBase:
 
+    """
+    Класс работы с базами данных
+    """
+
+    def __init__(self, admin_password,
+                 admin_name='postgres',
+                 database='Vacancy',
+                 host='localhost',
+                 port='5432'):
+
+        """
+        :param admin_password: Пароль от супер-пользователя
+        :param admin_name: Логин супер-пользователя (default = postgres)
+        :param database: База данных (default = Vacancy)
+        :param host: IP (default = localhost)
+        :param port: PORT (default = 5432)
+        """
+
+        self.connection = psycopg2.connect(database=database,
+                                           user=admin_name,
+                                           password=admin_password,
+                                           host=host, port=port)
+
+        self.connection.autocommit = True
+        self.cur = self.connection.cursor()
+        #  Проверяем наличие БД
+        self.cur.execute("SELECT datname FROM pg_database WHERE datname='vacancy'")
+        exists = self.cur.fetchone()
+        if exists:
+            pass
+        else:
+            try:
+                self.cur.execute('CREATE DATABASE Vacancy')  # создаем базу данных для хранения вакансий
+                self.cur.execute('CREATE TABLE founded_vacancy'  # создаем таблицу SQL для хранения найденных выкансий
+                            '('
+                            'ID SERIAL PRIMARY KEY,'
+                            'Vacancy_name varchar(255),'
+                            'Vacancy_description varchar(255),'
+                            'Vacancy_Salary_max int,'
+                            'Vacancy_Salary_min int,'
+                            'Vacancy_Salary_cur varchar(25),'
+                            'Vacancy_Salary_url varchar(255)'
+                            ')')
+                self.cur.execute('')
+            except Exception:
+                print('Sho')
+                pass
+
+    def cursor(self):
+        return self.cur
 class HeadHunter:
     """
     Класс получения и кэширования информации с сайта hh.ru
     """
     counter = 0  # Для перебора по страницам, перебор начинается с 0 страницы
+
     def __init__(self, vacancy_name, v_count=100):
         """
         :param v_count: Количество вакансий, не более 20 на 1 странице!.
@@ -23,7 +76,7 @@ class HeadHunter:
 
             if self.vacancy_list.status_code == 200:
                 vacancy_list = self.vacancy_list.json()
-                script.package(vacancy_list, Vacancy)
+                script.package(vacancy_list, Vacancy, DataBase('5772').cursor())
             self.counter += 1
 
 
@@ -48,7 +101,7 @@ class SuperJob:
 
             if self.vacancy_list.status_code == 200:
                 vacancy_list = self.vacancy_list.json()
-                script.package(vacancy_list, Vacancy)
+                script.package(vacancy_list, Vacancy, DataBase('5772').cursor())
             self.counter += 1
 
 

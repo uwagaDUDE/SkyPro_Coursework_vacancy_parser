@@ -2,7 +2,10 @@ import requests
 import json
 from data import errors as Error
 
-
+def db_input(cur, name, desc, v_f, v_c, v_t, v_u, lines):
+    counter = lines+1
+    cur.execute(f'INSERT INTO founded_vacancy '
+                f'({counter}, {name}, {desc}, {v_f}, {v_t}, {v_c}, {v_u})')
 def api_loader():
     """
     Загружаем api_key с сайта, чтобы он не светился в коде
@@ -17,7 +20,7 @@ def api_loader():
         raise Error.ApiKeyError(api_key)
 
 
-def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp):
+def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp, cur):
     """
     :param cl: Название класса работы с вакансиями, в нашем случае - Vacancy
     :param name: Название вакансии
@@ -49,6 +52,7 @@ def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp):
                     'vacancy_emp': v_emp
                      })
             cl.num_id = cl.num_id+1
+            db_input(cur, name, desc, v_f, v_c, v_t, v_u, cl.num_id)
             return cl
     except KeyError:
         cl.vacancy_list.append({
@@ -63,10 +67,11 @@ def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp):
             'vacancy_emp': v_emp
         })
         cl.num_id = cl.num_id + 1
+        db_input(cur, name, desc, v_f, v_c, v_t, v_u, cl.num_id)
         return cl
 
 
-def package(vacancy_list, cl):
+def package(vacancy_list, cl, cur):
     """
     Упаковка получаемого словаря с кучей информации в удобный словарь с нужной для работы инфой.
     :param vacancy_list: GET-Атрибут
@@ -97,7 +102,8 @@ def package(vacancy_list, cl):
                 v_salary_from = 'не указано'
                 v_salary_to = 'не указано'
                 v_salary_cur = ''
-            original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url, v_id, v_emp)
+            original_dict(cl, v_name, v_desc, v_salary_from,
+                          v_salary_cur, v_salary_to, v_url, v_id, v_emp, cur)
 
     except KeyError:
         for vac in vacancy_list['objects']:
@@ -112,7 +118,8 @@ def package(vacancy_list, cl):
                 v_url = vac["link"]
             except KeyError:
                 v_url = ('не рабочая ссылка :(')
-            original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url, v_id, v_emp)
+            original_dict(cl, v_name, v_desc, v_salary_from,
+                          v_salary_cur, v_salary_to, v_url, v_id, v_emp, cur)
     with open('../.cache.json', 'w', encoding='UTF-8') as file:
         cl.vacancy_dict['items'] = cl.vacancy_list
         wrt = json.dumps(cl.vacancy_dict, indent=2, ensure_ascii=False)
