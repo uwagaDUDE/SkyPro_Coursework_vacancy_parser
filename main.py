@@ -1,6 +1,7 @@
 from data import utils as functions, classes as scripts
 import os
 cycle = True
+
 if __name__ == '__main__':
     vc_searched = input(f'Введите название искомой вакансии: ')
     scripts.Vacancy(vc_searched).start()  # Инициализация программы

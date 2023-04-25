@@ -1,11 +1,24 @@
 import requests
 import json
 from data import errors as Error
+import psycopg2 as pg
 
-def db_input(cur, name, desc, v_f, v_c, v_t, v_u, lines):
-    counter = lines+1
-    cur.execute(f'INSERT INTO founded_vacancy '
-                f'({counter}, {name}, {desc}, {v_f}, {v_t}, {v_c}, {v_u})')
+def db_input(admin_password):
+    with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
+        with conn.cursor() as cur:
+            with open('../.cache.json', 'r', encoding='UTF-8') as cache:
+                cache_j = json.load(cache)
+                for i in cache_j['items']:
+                    # print(i)
+                    to_value = i["vacancy_salary"]["to"] if i["vacancy_salary"]["to"] != "не указано" else "NULL"
+                    from_value = i["vacancy_salary"]["from"] if i["vacancy_salary"]["from"] != "не указано" else "NULL"
+                    cur.execute(f'INSERT INTO founded_vacancy (id, vacancy_name, vacancy_description,'
+                                f'vacancy_salary_max, vacancy_salary_min, vacancy_salary_cur, '
+                                f'vacancy_salary_url) '
+                                f'VALUES %s, %s, %s, %s, %s, %s, %s',
+                                (i["self_id"], i["vacancy_name"], i["vacancy_description"], to_value, from_value,
+                                 i["vacancy_salary"]["cur"], i["vacancy_url"]))
+
 def api_loader():
     """
     Загружаем api_key с сайта, чтобы он не светился в коде
@@ -20,7 +33,7 @@ def api_loader():
         raise Error.ApiKeyError(api_key)
 
 
-def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp, cur):
+def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp):
     """
     :param cl: Название класса работы с вакансиями, в нашем случае - Vacancy
     :param name: Название вакансии
@@ -42,7 +55,7 @@ def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp, cur):
         else:
             cl.vacancy_list.append({
                     'my_id':cl.num_id,
-                    'self_id':v_id,
+                    'self_id':int(v_id),
                     'vacancy_name': name,
                     'vacancy_description': desc,
                     'vacancy_salary': {'from': v_f,
@@ -52,7 +65,6 @@ def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp, cur):
                     'vacancy_emp': v_emp
                      })
             cl.num_id = cl.num_id+1
-            db_input(cur, name, desc, v_f, v_c, v_t, v_u, cl.num_id)
             return cl
     except KeyError:
         cl.vacancy_list.append({
@@ -67,11 +79,10 @@ def original_dict(cl, name, desc, v_f, v_c, v_t, v_u, v_id, v_emp, cur):
             'vacancy_emp': v_emp
         })
         cl.num_id = cl.num_id + 1
-        db_input(cur, name, desc, v_f, v_c, v_t, v_u, cl.num_id)
         return cl
 
 
-def package(vacancy_list, cl, cur):
+def package(vacancy_list, cl):
     """
     Упаковка получаемого словаря с кучей информации в удобный словарь с нужной для работы инфой.
     :param vacancy_list: GET-Атрибут
@@ -103,7 +114,7 @@ def package(vacancy_list, cl, cur):
                 v_salary_to = 'не указано'
                 v_salary_cur = ''
             original_dict(cl, v_name, v_desc, v_salary_from,
-                          v_salary_cur, v_salary_to, v_url, v_id, v_emp, cur)
+                          v_salary_cur, v_salary_to, v_url, v_id, v_emp)
 
     except KeyError:
         for vac in vacancy_list['objects']:
@@ -119,8 +130,8 @@ def package(vacancy_list, cl, cur):
             except KeyError:
                 v_url = ('не рабочая ссылка :(')
             original_dict(cl, v_name, v_desc, v_salary_from,
-                          v_salary_cur, v_salary_to, v_url, v_id, v_emp, cur)
-    with open('../.cache.json', 'w', encoding='UTF-8') as file:
+                          v_salary_cur, v_salary_to, v_url, v_id, v_emp)
+    with open('./.cache.json', 'w', encoding='UTF-8') as file:
         cl.vacancy_dict['items'] = cl.vacancy_list
         wrt = json.dumps(cl.vacancy_dict, indent=2, ensure_ascii=False)
         file.write(wrt)
@@ -138,7 +149,7 @@ def liked_proffesion(user_like, cl):
                    'lF', 'LF']
     if user_like.lower() in yes_answers:
         try:
-            with open('../last_search.json', "r", encoding='UTF-8') as last:
+            with open('./last_search.json', "r", encoding='UTF-8') as last:
                 last_load = json.load(last)
                 cl.like_id.append(last_load['self_id'])
                 with open('./liked_vacancy.json', "a", encoding='UTF-8') as liked:
@@ -162,7 +173,7 @@ def max_salary():
     """
     sal_list = []
     sal_list_ids = []
-    with open('../.cache.json', "r", encoding='UTF-8') as max_salary:
+    with open('./.cache.json', "r", encoding='UTF-8') as max_salary:
         json_dict = json.load(max_salary)
         for item in json_dict['items']:
             if item["vacancy_salary"]['to'] == 'не указано' or item["vacancy_salary"]['to'] == 0:
@@ -191,4 +202,4 @@ def max_salary():
 
 
 if __name__ == '__main__':  # Для тестовых запусков
-    print(max_salary())
+    db_input('5772')
