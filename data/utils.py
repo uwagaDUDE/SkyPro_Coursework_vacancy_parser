@@ -14,8 +14,8 @@ def db_input(admin_password):
                     from_value = i["vacancy_salary"]["from"] if i["vacancy_salary"]["from"] != "не указано" else "NULL"
                     cur.execute(f'INSERT INTO founded_vacancy (id, vacancy_name, vacancy_description,'
                                 f'vacancy_salary_max, vacancy_salary_min, vacancy_salary_cur, '
-                                f'vacancy_salary_url) '
-                                f'VALUES %s, %s, %s, %s, %s, %s, %s',
+                                f'vacancy_url) '
+                                f'VALUES (%s, %s, %s, %s, %s, %s, %s)',
                                 (i["self_id"], i["vacancy_name"], i["vacancy_description"], to_value, from_value,
                                  i["vacancy_salary"]["cur"], i["vacancy_url"]))
 
