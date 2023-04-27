@@ -1,5 +1,6 @@
 from data import utils as functions, classes as scripts
 import os
+
 cycle = True
 
 if __name__ == '__main__':
@@ -23,6 +24,7 @@ if __name__ == '__main__':
                 if user_like.lower() == 'stop':
                     cycle = False
                     print('Надеюсь вы нашли что искали :)')
+
 
                 if user_like.lower() == 'max':
                     print(functions.max_salary())

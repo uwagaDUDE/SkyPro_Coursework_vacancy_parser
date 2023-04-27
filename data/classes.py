@@ -1,6 +1,7 @@
 import random
 import requests
 import json
+import os
 from data import errors as Error, utils as script
 import psycopg2 as pg
 
@@ -161,5 +162,6 @@ class Vacancy:
             except Exception:
                 raise Error.UnknowVacancie()
 
-db = DataBase('5772')
+if __name__ == '__main__':
+    DataBase('5772')
 

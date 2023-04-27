@@ -1,8 +1,10 @@
+venv
 .idea
 .cache
 .env
 test.py
 last_search.json
 liked_vacancy.txt
+liked_vacancy.json
 /.cache.json
 /current_vacancy.json

@@ -19,6 +19,7 @@ def db_input(admin_password):
                                 (i["self_id"], i["vacancy_name"], i["vacancy_description"], to_value, from_value,
                                  i["vacancy_salary"]["cur"], i["vacancy_url"]))
 
+
 def api_loader():
     """
     Загружаем api_key с сайта, чтобы он не светился в коде
@@ -131,10 +132,9 @@ def package(vacancy_list, cl):
                 v_url = ('не рабочая ссылка :(')
             original_dict(cl, v_name, v_desc, v_salary_from,
                           v_salary_cur, v_salary_to, v_url, v_id, v_emp)
-    with open('./.cache.json', 'w', encoding='UTF-8') as file:
-        cl.vacancy_dict['items'] = cl.vacancy_list
-        wrt = json.dumps(cl.vacancy_dict, indent=2, ensure_ascii=False)
-        file.write(wrt)
+
+            original_dict(cl, v_name, v_desc, v_salary_from, v_salary_cur, v_salary_to, v_url, v_id, v_emp)
+
 
 
 def liked_proffesion(user_like, cl):
@@ -203,3 +203,4 @@ def max_salary():
 
 if __name__ == '__main__':  # Для тестовых запусков
     db_input('5772')
+
