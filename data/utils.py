@@ -19,6 +19,34 @@ def db_input(admin_password):
                                 (i["self_id"], i["vacancy_name"], i["vacancy_description"], to_value, from_value,
                                  i["vacancy_salary"]["cur"], i["vacancy_url"]))
 
+def db_vacancy_search(password, vacancy_list):
+    with pg.connect(f'dbname=vacancy user=postgres host=localhost password={password}') as conn:
+        with conn.cursor() as cur:
+            for item in vacancy_list['items']:
+                if "salary" in item and item["salary"] is not None and "from" in item["salary"] and item["salary"][
+                    "from"] is not None:
+                    anti_none_from = item["salary"]["from"]
+                else:
+                    anti_none_from = 0
+
+                if "salary" in item and item["salary"] is not None and "to" in item["salary"] and item["salary"][
+                    "to"] is not None:
+                    anti_none_to = item["salary"]["to"]
+                else:
+                    anti_none_to = 0
+
+                if "salary" in item and item["salary"] is not None and "currency" in item["salary"] and item["salary"][
+                    "currency"] is not None:
+                    anti_none = item["salary"]['currency']
+                else:
+                    anti_none = 'Не указано'
+                cur.execute(f'INSERT INTO founded_vacancy (id, employeer_name, vacancy_name, vacancy_description,'
+                                f'vacancy_salary_max, vacancy_salary_min, vacancy_salary_cur, '
+                                f'vacancy_url) '
+                                f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                                (item['id'],item['employer']['name'], item["name"], item['snippet']['responsibility'],
+                                 anti_none_to, anti_none_from,
+                                 anti_none, item['alternate_url']))
 def api_loader():
     """
     Загружаем api_key с сайта, чтобы он не светился в коде
