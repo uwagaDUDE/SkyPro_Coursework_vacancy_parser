@@ -35,14 +35,8 @@ if __name__ == '__main__':
 
             while cycle is not False:
 
-                vacancy = scripts.Vacancy(vc_searched)
-                print(f'\n{vacancy}')
-                print('"stop" чтобы закончить поиск вакансий')
-                user_like = input(f'"ENTER" чтобы продолжить: ')
-
-                if user_like.lower() == 'stop':
-                    cycle = False
-                    print('Надеюсь вы нашли что искали :)')
+                scripts.Vacancy(vc_searched)
+                functions.db_vacancy_output(password)
 
         elif user_answer == '1':
 
@@ -51,7 +45,9 @@ if __name__ == '__main__':
             print('2. Сколько всего вакансий от работодателя у нас в базе данных')
             print('3. Поиск вакансий у работодателя по ключевому слову\n'
                   '4. Поиск вакансий у которых зарплата выше средней')
+
             user_choose = input('Ваш выбор: ')
+
             if user_choose == '1':
                 emp_search = input('Работодатель: ')
                 db.get_urls(emp_search)
@@ -59,10 +55,11 @@ if __name__ == '__main__':
                 db.get_employeer(password, emp_search)
             elif user_choose == '2':
                 db.get_all_vacancies(password)
-            elif user_choose == "4":
+            elif user_choose == "3":
                 key_word = input('Введите ключевое слово: ')
-                db.get_vacancies_with_keyword(password, key_word)
-            elif user_choose == '5':
+                employer = input('Название работодателя: ')
+                db.get_vacancies_with_keyword(password, key_word, employer)
+            elif user_choose == '4':
                 db.get_max_avg(password)
 
         elif user_answer == '3':

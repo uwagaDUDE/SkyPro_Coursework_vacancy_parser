@@ -3,25 +3,11 @@ import json
 from data import errors as Error
 import psycopg2 as pg
 
-def db_input(admin_password):
-    with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
-        with conn.cursor() as cur:
-            with open('../.cache.json', 'r', encoding='UTF-8') as cache:
-                cache_j = json.load(cache)
-                for i in cache_j['items']:
-                    # print(i)
-                    to_value = i["vacancy_salary"]["to"] if i["vacancy_salary"]["to"] != "не указано" else "NULL"
-                    from_value = i["vacancy_salary"]["from"] if i["vacancy_salary"]["from"] != "не указано" else "NULL"
-                    cur.execute(f'INSERT INTO founded_vacancy (id, vacancy_name, vacancy_description,'
-                                f'vacancy_salary_max, vacancy_salary_min, vacancy_salary_cur, '
-                                f'vacancy_url) '
-                                f'VALUES (%s, %s, %s, %s, %s, %s, %s)',
-                                (i["self_id"], i["vacancy_name"], i["vacancy_description"], to_value, from_value,
-                                 i["vacancy_salary"]["cur"], i["vacancy_url"]))
 
 def db_vacancy_search(password, vacancy_list):
     with pg.connect(f'dbname=vacancy user=postgres host=localhost password={password}') as conn:
         with conn.cursor() as cur:
+            cur.execute('TRUNCATE TABLE founded_vacancy') # Чистим БД
             for item in vacancy_list['items']:
                 if "salary" in item and item["salary"] is not None and "from" in item["salary"] and item["salary"][
                     "from"] is not None:
@@ -43,10 +29,30 @@ def db_vacancy_search(password, vacancy_list):
                 cur.execute(f'INSERT INTO founded_vacancy (id, employeer_name, vacancy_name, vacancy_description,'
                                 f'vacancy_salary_max, vacancy_salary_min, vacancy_salary_cur, '
                                 f'vacancy_url) '
-                                f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s)',
+                                f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s) ',
                                 (item['id'],item['employer']['name'], item["name"], item['snippet']['responsibility'],
                                  anti_none_to, anti_none_from,
                                  anti_none, item['alternate_url']))
+
+def db_vacancy_output(password):
+    with pg.connect(f'dbname=vacancy user=postgres host=localhost password={password}') as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT vacancy_name, vacancy_description, vacancy_salary_min, vacancy_salary_max, "
+                "vacancy_salary_cur, vacancy_url, employeer_name FROM founded_vacancy")
+
+            # Получение результатов запроса
+            rows = cur.fetchall()
+
+            # Вывод информации о вакансиях
+            for row in rows:
+                print(f'Вакансия: {row[0]}\n'
+                      f'Описание: {row[1]}\n'
+                      f'Зарплата: от {row[2]} до {row[3]} {row[4]}\n'
+                      f'Ссылка: {row[5]}\n'
+                      f'Работодатель: {row[6]}\n')
+                input(f'"ENTER" чтобы продолжить... ')
+
 def api_loader():
     """
     Загружаем api_key с сайта, чтобы он не светился в коде
@@ -228,6 +234,3 @@ def max_salary():
                    f'Ссылка: {sal["vacancy_url"]}\n' \
                    f'Работодатель: {sal["vacancy_emp"]}'
 
-
-if __name__ == '__main__':  # Для тестовых запусков
-    db_input('5772')

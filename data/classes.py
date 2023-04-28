@@ -148,13 +148,12 @@ class DataBase:
                     print(row)
                     input('Для продолжения нажмите "ENTER"...')
 
-    def get_vacancies_with_keyword(self, admin_password, key_word):
-
+    def get_vacancies_with_keyword(self, admin_password, key_word, key_employer):
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
             with conn.cursor() as cur:
                 cur.execute('SELECT employeer_name, vacancy_name, vacancy_salary_max, '
                             'vacancy_salary_min, vacancy_salary_cur, vacancy_url FROM employeer_vacancy '
-                            f'WHERE vacancy_name LIKE \'%{key_word}%\'')
+                            f'WHERE vacancy_name LIKE \'%{key_word}%\' AND employeer_name LIKE \'%{key_employer}%\'')
                 rows = cur.fetchall()
                 for row in rows:
                     print(row)
@@ -176,10 +175,10 @@ class DataBase:
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
             with conn.cursor() as cur:
                 cur.execute(
-                    'SELECT AVG(vacancy_salary_max + vacancy_salary_min) / 2 AS avg_salary FROM employeer_vacancy ')
+                    'SELECT AVG(CAST(vacancy_salary_max AS INTEGER) + CAST(vacancy_salary_min AS INTEGER)) / 2 AS avg_salary FROM employeer_vacancy')
                 result = cur.fetchone()
                 avg_salary = result[0] if result else None
-                return avg_salary
+                return f'{int(avg_salary)} рублей составляет средняя зарплата по всем найденым вакансиям'
 
     def get_max_avg(self, admin_password):
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
