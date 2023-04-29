@@ -211,8 +211,9 @@ class HeadHunter:
                                    parametres)
 
             if self.vacancy_list.status_code == 200:
+                print(self.counter)
                 self.vacancy_list = self.vacancy_list.json()
-                script.db_vacancy_search(password ,self.vacancy_list)
+                script.db_vacancy_search(password, self.vacancy_list)
             self.counter += 1
 
 
@@ -221,7 +222,7 @@ class SuperJob:
     Класс обработки получаемой информации с сайта superjob.ru
     """
     counter = 0  # Для перебора по страницам, перебор начинается с 0 страницы
-    def __init__(self, vacancy_name, v_count=100):
+    def __init__(self, vacancy_name, password, v_count=100):
         """
         :param vacancy_name: Название вакансии
         """
@@ -236,8 +237,8 @@ class SuperJob:
                                              params=params)
 
             if self.vacancy_list.status_code == 200:
-                vacancy_list = self.vacancy_list.json()
-                script.package(vacancy_list, Vacancy)
+                self.vacancy_list = self.vacancy_list.json()
+                script.db_vacancy_search(password, self.vacancy_list)
             self.counter += 1
 
 
@@ -261,28 +262,6 @@ class Vacancy:
         """
         Инициализирует классы HeadHunter и SuperJob
         """
-        HeadHunter(self.name, password), SuperJob(self.name)
+        HeadHunter(self.name, password), SuperJob(self.name, password)
 
-    def __str__(self):
-        """
-        :return: Вывод информации
-        """
-        with open('./last_search.json', 'w', encoding='UTF-8') as last_vac:
-            try:
-                    random_vacancy = self.vacancy_dict['items'][random.randint(0, len(self.vacancy_dict['items']))]
-                    x = json.dumps(random_vacancy, indent=2, ensure_ascii=False)
-                    last_vac.write(x)
-            except IndexError:
-                raise Error.UnknowVacancie()
-            try:
-                return f'Вакансия: {random_vacancy["vacancy_name"]}\n' \
-                   f'Описание: {random_vacancy["vacancy_description"]}\n' \
-                   f'Зарплата: от {random_vacancy["vacancy_salary"]["from"]} ' \
-                   f'до {random_vacancy["vacancy_salary"]["to"]} {random_vacancy["vacancy_salary"]["cur"]}\n' \
-                   f'Ссылка: {random_vacancy["vacancy_url"]}\n' \
-                   f'Работодатель: {random_vacancy["vacancy_emp"]}'
-            except Exception:
-                raise Error.UnknowVacancie()
-
-db = DataBase('5772')
 
