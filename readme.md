@@ -1,7 +1,16 @@
-# Курсовой проект: Парсер вакансий с сайтов HH.ru и Superjob.ru
-## Используемый язык программирования: Python
+<div align="center">
+
+  <h3 align="center">Курсовой проект: Парсер вакансий с сайтов HH.ru и Superjob.ru</h3>
+
+  <p align="center">
+  
+   Для работы необходимо установить PostgreSQL
+   
+</div>
+
+## Используемый язык программирования: Python + SQL-запросы
 **Требуется установить зависимости!**
-<br>``` py -m pip install -r requirements.txt ```
+<br> ```sh py -m pip install -r requirements.txt ```
 <details><summary>Используемые библиотеки</summary>
 <br>certifi==2022.12.7
 <br>charset-normalizer==3.1.0
@@ -16,7 +25,7 @@
 
 #### Запуск происходит из файла main.py
 <br>**Для работы с API superjob.ru используется мой API ключ, свой вам вводить не нужно**</br>
-**Поиск вакансии происходит по запросу пользователя через терминал**
+**Поиск вакансии происходит по запросу пользователя через терминал.**
 ** **
 **В программе производятся GET запросы к таким сайтам как: headhunter.ru, superjob.ru, cbr-xml-daily.ru, pastebin.com**
 >Контактный TG: *@uwagadude*
