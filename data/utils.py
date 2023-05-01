@@ -69,12 +69,13 @@ def db_vacancy_search(password, vacancy_list):
                                 (vac['id'], vac['firm_name'], vac['profession'], vac["candidat"],
                                  vac["payment_to"], vac["payment_from"],
                                  vac["currency"], vac["link"]))
-def db_vacancy_output(password):
+def db_vacancy_output(password, vacancy):
     with pg.connect(f'dbname=vacancy user=postgres host=localhost password={password}') as conn:
         with conn.cursor() as cur:
             cur.execute(
                 "SELECT vacancy_name, vacancy_description, vacancy_salary_min, vacancy_salary_max, "
-                "vacancy_salary_cur, vacancy_url, employeer_name FROM founded_vacancy")
+                "vacancy_salary_cur, vacancy_url, employeer_name FROM founded_vacancy "
+                f"WHERE vacancy_name LIKE \'%{vacancy}%\'")
 
             # Получение результатов запроса
             rows = cur.fetchall()

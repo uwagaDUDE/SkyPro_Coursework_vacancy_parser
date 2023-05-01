@@ -37,7 +37,7 @@ if __name__ == '__main__':
             while cycle is not False:
 
                 scripts.Vacancy(vc_searched)
-                functions.db_vacancy_output(password)
+                functions.db_vacancy_output(password, vc_searched)
 
         elif user_answer == '2':
 

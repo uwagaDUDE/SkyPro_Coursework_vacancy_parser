@@ -1,7 +1,5 @@
-import random
 import requests
-import json
-from data import errors as Error, utils as script
+from data import utils as script
 import psycopg2 as pg
 
 class DataBase:
@@ -217,7 +215,6 @@ class HeadHunter:
                                    parametres)
 
             if self.vacancy_list.status_code == 200:
-                print(self.counter)
                 self.vacancy_list = self.vacancy_list.json()
                 script.db_vacancy_search(password, self.vacancy_list)
             self.counter += 1
