@@ -26,7 +26,9 @@ if __name__ == '__main__':
               '1. Искать вакансию\n'
               '2. Фильтр по работодателю\n'
               '3. Средняя ЗП по всем вакансиям\n'
-              '4. Поиск вакансий по зарплате, которая выше средней')
+              '4. Поиск вакансий по зарплате, которая выше средней\n'
+              '5. Сколько всего вакансий работодателя\n'
+              '6. Поиск всех вакансий по имени работодателя')
         user_answer = input('Ваш выбор: ')
 
         if user_answer == '1':
@@ -63,3 +65,10 @@ if __name__ == '__main__':
 
         elif user_answer == '4':
             print(db.get_max_avg(password))
+
+        elif user_answer == '5':
+            db.get_companies_and_vacancies_count(password)
+
+        elif user_answer == "6":
+            emp = input('Имя работодателя: ')
+            db.get_emp_vacancies(password, emp)

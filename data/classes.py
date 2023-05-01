@@ -86,7 +86,10 @@ class DataBase:
             self.counter += 1
 
     def get_vacancy(self, admin_password):
-
+        """
+        Вносит вакансию в таблицу
+        :param admin_password: пароль к ДБ
+        """
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
             with conn.cursor() as cur:
                 for i in self.url_list:
@@ -131,7 +134,10 @@ class DataBase:
                         conn.commit()
 
     def get_companies_and_vacancies_count(self, admin_password):
-
+        """
+        Выводит имя работодателя и кол-во его вакансий
+        :param admin_password: пароль к ДБ
+        """
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
             with conn.cursor() as cur:
                 cur.execute("SELECT employeer_name, count(*) FROM founded_vacancy GROUP BY employeer_name;")
@@ -139,12 +145,17 @@ class DataBase:
                 for row in rows:
                     print(row[0], row[1])
 
-    def get_all_vacancies(self, admin_password):
-
+    def get_emp_vacancies(self, admin_password, key_word):
+        """
+        Поиск по имени работодателя
+        :param admin_password: пароль к ДБ
+        :param key_word: Ключевое слово
+        """
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
             with conn.cursor() as cur:
                 cur.execute('SELECT employeer_name, vacancy_name, vacancy_salary_max, '
-                            'vacancy_salary_min, vacancy_salary_cur, vacancy_url FROM founded_vacancy')
+                            'vacancy_salary_min, vacancy_salary_cur, vacancy_url FROM founded_vacancy '
+                            f'WHERE employeer_name LIKE \'%{key_word}%\'')
                 rows = cur.fetchall()
                 for row in rows:
                     print(f'Вакансия: {row[0]}\n'
@@ -154,6 +165,12 @@ class DataBase:
                     input(f'"ENTER" чтобы продолжить... ')
 
     def get_vacancies_with_keyword(self, admin_password, key_word, key_employer):
+        """
+        Поиск по имени работодателя
+        :param admin_password: пароль к ДБ
+        :param key_word: Ключевое слово
+        :param key_employer: Имя работодателя
+        """
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
             with conn.cursor() as cur:
                 cur.execute('SELECT employeer_name, vacancy_name, vacancy_salary_max, '
@@ -165,16 +182,17 @@ class DataBase:
                     input('Для продолжения нажмите "ENTER"...')
 
     def get_employeer(self, admin_password, employeer):
-
+        """
+        Внести работодателя в базу данных
+        :param employeer: Имя работодателя
+        :param admin_password: пароль к БД
+        """
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
             with conn.cursor() as cur:
                 cur.execute('SELECT employeer_name, vacancy_name, vacancy_salary_max, '
                             'vacancy_salary_min, vacancy_salary_cur, vacancy_url FROM founded_vacancy '
                             f'WHERE employeer_name LIKE \'%{employeer}%\'')
-                rows = cur.fetchall()
-                for row in rows:
-                    print(row)
-                    input('Для продолжения нажмите "ENTER"...')
+
 
     def get_avg_salary(self, admin_password):
         with pg.connect(f'dbname=vacancy user=postgres host=localhost password={admin_password}') as conn:
