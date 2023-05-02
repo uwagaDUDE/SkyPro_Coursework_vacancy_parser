@@ -1,11 +1,14 @@
 # Курсовой проект: Парсер вакансий с сайтов HH.ru и Superjob.ru
-## Используемый язык программирования: Python
-**Требуется установить зависимости!**
+## Используемый язык программирования: Python + SQL-запросы
+**Для корректной работы вам потребуется установить:**
+<br>**1. <a href="https://www.postgresql.org/download/">PostgreSQL</a>**
+<br>**2. Зависимости:**
 <br>``` py -m pip install -r requirements.txt ```
 <details><summary>Используемые библиотеки</summary>
 <br>certifi==2022.12.7
 <br>charset-normalizer==3.1.0
 <br>idna==3.4
+<br>psycopg2==2.9.6
 <br>PyQt6==6.4.2
 <br>PyQt6-Qt6==6.4.2
 <br>PyQt6-sip==13.4.1
