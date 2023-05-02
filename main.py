@@ -1,56 +1,74 @@
 from data import utils as functions, classes as scripts
 import os
+from dotenv import dotenv_values
 cycle = True
-#ДЛЯ РАБОТЫ С БД НЕОБХОДИМ ПАРОЛЬ!
-password = '5772'
+
+
 
 if __name__ == '__main__':
+
+    try:
+        password = dotenv_values('.env')['PASSWORD']
+    except Exception as AllErrors:
+        env_file = open('.env', 'w', encoding="UTF-8")
+        print('Введите пароль к базе данных!')
+        password = input('Password: ')
+        env_file.write(f'PASSWORD={password}')
+        env_file.close()
+        password = dotenv_values('.env')['PASSWORD']
+
     db = scripts.DataBase(password)
+
     while True:
+
         print('  ### МЕНЮ ### ')
-        print('Что будем искать?\n'
-              '1. Работодателя\n'
-              '2. Вакансию')
+        print('Что будем делать?\n'
+              '1. Искать вакансию\n'
+              '2. Фильтр по работодателю\n'
+              '3. Средняя ЗП по всем вакансиям\n'
+              '4. Поиск вакансий по зарплате, которая выше средней\n'
+              '5. Сколько всего вакансий работодателя\n'
+              '6. Поиск всех вакансий по имени работодателя')
         user_answer = input('Ваш выбор: ')
-        if user_answer == '2':
+
+        if user_answer == '1':
+
             vc_searched = input(f'Введите название искомой вакансии: ')
-            scripts.Vacancy(vc_searched).start()  # Инициализация программы
+            scripts.Vacancy(vc_searched).start(password)  # Инициализация программы
 
             while cycle is not False:
 
-                vacancy = scripts.Vacancy(vc_searched)
-                print(f'\n{vacancy}')
-                print('\nПонравилась вакансия?')
-                user_like = input(f'(Да/нет/stop/max): ')
+                scripts.Vacancy(vc_searched)
+                functions.db_vacancy_output(password, vc_searched)
 
-                if user_like.lower() == 'stop':
-                    cycle = False
-                    print('Надеюсь вы нашли что искали :)')
+        elif user_answer == '2':
 
-                if user_like.lower() == 'max':
-                    print(functions.max_salary())
-                    input('Нажмите ENTER чтобы продолжить')
-
-                functions.liked_proffesion(user_like, vacancy)
-        elif user_answer == '1':
             print('  ### МЕНЮ ### ')
-            print('1. Поиск по имени работодателя')
-            print('2. Сколько всего вакансий от работодателя у нас в базе данных')
-            print('3. Средняя зарплата по всем вакансиям')
-            print('4. Поиск вакансий у работодателя по ключевому слову\n'
-                  '5. Поиск вакансий у которых зарплата выше средней')
+            print('1. Внести работодателя в базу данных')
+            print('2. Поиск вакансий у работодателя по ключевому слову')
+
             user_choose = input('Ваш выбор: ')
+
             if user_choose == '1':
                 emp_search = input('Работодатель: ')
                 db.get_urls(emp_search)
                 db.get_vacancy(password)
                 db.get_employeer(password, emp_search)
-            elif user_choose == '2':
-                db.get_all_vacancies(password)
-            elif user_choose == '3':
-                print(db.get_avg_salary(password))
-            elif user_choose == "4":
+
+            elif user_choose == "2":
                 key_word = input('Введите ключевое слово: ')
-                db.get_vacancies_with_keyword(password, key_word)
-            elif user_choose == '5':
-                db.get_max_avg(password)
+                employer = input('Название работодателя: ')
+                db.get_vacancies_with_keyword(password, key_word, employer)
+
+        elif user_answer == '3':
+            print(db.get_avg_salary(password))
+
+        elif user_answer == '4':
+            print(db.get_max_avg(password))
+
+        elif user_answer == '5':
+            db.get_companies_and_vacancies_count(password)
+
+        elif user_answer == "6":
+            emp = input('Имя работодателя: ')
+            db.get_emp_vacancies(password, emp)
